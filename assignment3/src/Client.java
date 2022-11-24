@@ -53,7 +53,7 @@ public class Client {
 
         clientTuple = getTuple();
 
-        System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
+        //System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
 
         licenseManager.accept(encryptWithRSA(clientTuple));
 
