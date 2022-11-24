@@ -12,18 +12,22 @@ public class Client {
 
     private final String username = "bkisa_yedmrl";
     private final String serial = "brky-yedl-b465";
+    Consumer<String> licenseManager = (string -> {
+        LicenseManager manager = null;
+        try {
+            manager = new LicenseManager();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        manager.processTuple(string);
+    });
     private String macAdress;
     private String diskSerial;
     private String motherboardSerial;
-
     private String clientTuple;
-
-
-
     private File license;
     private FileInputStream inputStream;
     private FileOutputStream outputStream;
-
 
     public Client() throws IOException {
         System.out.println(checkLicenseExistence());
@@ -34,16 +38,6 @@ public class Client {
         licenseManager.accept(getTuple());
 
     }
-
-    Consumer<String> licenseManager = (string -> {
-        LicenseManager manager = null;
-        try {
-            manager = new LicenseManager();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        manager.processTuple(string);
-    });
 
     private boolean checkLicenseExistence() {
         license = new File("license.txt");
@@ -62,19 +56,23 @@ public class Client {
             return false;
         }
     }
+
     private void verifyLicense() {
 
     }
+
     private void createLicense() {
         getDeviceInformation();
 
     }
-    private String getTuple(){
+
+    private String getTuple() {
         CharSequence seq = "nullSerialNumber";
-        motherboardSerial = motherboardSerial.replace(seq,"");
+        motherboardSerial = motherboardSerial.replace(seq, "");
         motherboardSerial = motherboardSerial.strip();
-        return username+"$"+serial+"$"+macAdress+"$"+diskSerial+"$"+motherboardSerial;
+        return username + "$" + serial + "$" + macAdress + "$" + diskSerial + "$" + motherboardSerial;
     }
+
     private void getDeviceInformation() {
         this.macAdress = getMacAdress();
         this.diskSerial = getdiskSerial('C');
@@ -85,6 +83,7 @@ public class Client {
         System.out.println("mobo: " + motherboardSerial);
 
     }
+
     private String getMotherboardSerial() {
         try {
             String result = null;
@@ -108,6 +107,7 @@ public class Client {
         }
         return "null";
     }
+
     public String getdiskSerial(Character letter) {
         String line;
         String serial = null;
@@ -127,6 +127,7 @@ public class Client {
         }
         return serial;
     }
+
     private String getMacAdress() {
         InetAddress localHost = null;
         NetworkInterface networkInterface = null;
@@ -146,7 +147,6 @@ public class Client {
             throw new RuntimeException(e);
         }
     }
-
 
 
 }
