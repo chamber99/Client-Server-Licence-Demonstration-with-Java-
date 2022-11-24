@@ -8,10 +8,14 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.function.Consumer;
 
@@ -21,7 +25,7 @@ public class Client {
     //TODO cidden yane
 
     private PrivateKey privateKey;
-    private PublicKey publicKey;
+
     private KeyFactory keyFactory;
 
     private Cipher cipher;
@@ -29,15 +33,8 @@ public class Client {
 
     private final String username = "bkisa_yedmrl";
     private final String serial = "brky-yedl-b465";
-    Consumer<String> licenseManager = (string -> {
-        LicenseManager manager;
-        try {
-            manager = new LicenseManager();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        manager.processEncodedInfo(string);
-    });
+
+
     private String macAdress;
     private String diskSerial;
     private String motherboardSerial;
@@ -58,7 +55,15 @@ public class Client {
 
         System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
 
+        licenseManager.accept(encryptWithRSA(clientTuple));
+
     }
+
+    public Consumer<String> licenseManager = (string -> {
+        LicenseManager manager;
+        manager = new LicenseManager();
+        System.out.println(manager.processEncodedInfo(string));
+    });
 
     private boolean checkLicenseExistence() {
         license = new File("license.txt");
@@ -170,20 +175,23 @@ public class Client {
     private String encryptWithRSA(String tuple) {
         byte[] keyBytes;
 
-        File publicKeyFile = new File("keys\\public.key");
-        if (publicKeyFile.exists() && publicKeyFile.isFile()) {
+        File privateKeyFile = new File("keys\\private.key");
+        if (privateKeyFile.exists() && privateKeyFile.isFile()) {
             try {
-                inputStream = new FileInputStream(publicKeyFile);
+                inputStream = new FileInputStream(privateKeyFile);
                 keyBytes = inputStream.readAllBytes();
 
                 keyFactory = KeyFactory.getInstance("RSA");
-                EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
-                publicKey = keyFactory.generatePublic(publicKeySpec);
+                EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(keyBytes);
+                privateKey = keyFactory.generatePrivate(privateKeySpec);
 
-                cipher = Cipher.getInstance("RSA");
-                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+                cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+                cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
+
+                tupleBytes = padPlainText(tupleBytes);
+
                 byte[] encryptedBytes = cipher.doFinal(tupleBytes);
 
                 return Base64.getEncoder().encodeToString(encryptedBytes);
@@ -194,6 +202,21 @@ public class Client {
             }
         }
         return "Something went wrong.";
+    }
+
+    public byte[] padPlainText(byte[] plainText) {
+        for (byte b : plainText) {
+            System.out.println(b);
+        }
+        byte[] byteArray = plainText;
+        int remainder = byteArray.length % 8;
+        byte[] padded = new byte[byteArray.length + (8 - remainder)];
+        Arrays.fill(padded, (byte) (8 - remainder));
+        int index = 0;
+        for (byte b : byteArray) {
+            padded[index++] = b;
+        }
+        return padded;
     }
 
 
