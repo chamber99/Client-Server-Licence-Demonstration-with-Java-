@@ -17,6 +17,11 @@ public class LicenseManager {
 
     PrivateKey privateKey;
 
+    Client client;
+
+    Signature privateSignature;
+    MessageDigest messageDigest;
+
     PublicKey publicKey;
 
     Cipher cipher;
@@ -27,7 +32,13 @@ public class LicenseManager {
     FileOutputStream fos;
 
 
-    public LicenseManager() {
+    public LicenseManager(Client clientVar) {
+        this.client = clientVar;
+        try {
+            messageDigest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
 
 
     }
@@ -86,6 +97,33 @@ public class LicenseManager {
                  BadPaddingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public byte[] hashWithMD5(String result) {
+        byte[] hash;
+        hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
+        return hash;
+    }
+
+
+    public byte[] sign(byte[] hash) {
+        try {
+            privateSignature = Signature.getInstance("SHA256withRSA");
+            privateSignature.initSign(privateKey);
+            privateSignature.update(hash);
+
+            byte[] sign = privateSignature.sign();
+
+            client.verifyHash(publicKey, sign);
+
+            return sign;
+
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
 

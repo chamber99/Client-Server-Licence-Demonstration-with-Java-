@@ -8,10 +8,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
+import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -25,6 +22,8 @@ public class Client {
     //TODO cidden yane
 
     private PrivateKey privateKey;
+
+    Signature signature;
 
     private KeyFactory keyFactory;
 
@@ -46,9 +45,10 @@ public class Client {
     private FileOutputStream outputStream;
 
     public Client() throws IOException {
-        getDeviceInformation();
-        this.manager = new LicenseManager();
+        this.manager = new LicenseManager(this);
         manager.createKeys();
+        getDeviceInformation();
+
         //System.out.println(checkLicenseExistence());
         System.out.println();
         //getDeviceInformation(); //for testing
@@ -67,9 +67,6 @@ public class Client {
     public Consumer<byte[]> licenseManager = (string -> {
         getDeviceInformation();
         System.out.println(clientTuple + "\n");
-
-        manager = new LicenseManager();
-        manager.createKeys();
         System.out.println(manager.processEncodedInfo(string));
     });
 
@@ -227,6 +224,21 @@ public class Client {
             padded[index++] = b;
         }
         return padded;
+    }
+
+    public boolean verifyHash(PublicKey publicKey, byte[] input) {
+        try {
+            signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(publicKey);
+
+            boolean verify = signature.verify(input);
+            return verify;
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
 
