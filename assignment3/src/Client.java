@@ -1,8 +1,18 @@
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.function.Consumer;
 
 public class Client {
@@ -10,16 +20,23 @@ public class Client {
     //TODO RSA öğren amk
     //TODO cidden yane
 
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
+    private KeyFactory keyFactory;
+
+    private Cipher cipher;
+
+
     private final String username = "bkisa_yedmrl";
     private final String serial = "brky-yedl-b465";
     Consumer<String> licenseManager = (string -> {
-        LicenseManager manager = null;
+        LicenseManager manager;
         try {
             manager = new LicenseManager();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        manager.processTuple(string);
+        manager.processEncodedInfo(string);
     });
     private String macAdress;
     private String diskSerial;
@@ -35,7 +52,11 @@ public class Client {
         //getDeviceInformation(); //for testing
         System.out.println(" ++++++++ ");
         //System.out.println(getTuple());
-        licenseManager.accept(getTuple());
+        //licenseManager.accept(getTuple());
+
+        clientTuple = getTuple();
+
+        System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
 
     }
 
@@ -88,8 +109,7 @@ public class Client {
         try {
             String result = null;
             Process p = Runtime.getRuntime().exec("wmic baseboard get serialnumber");
-            BufferedReader input
-                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = input.readLine()) != null) {
                 result += line;
@@ -114,8 +134,7 @@ public class Client {
         Process process;
         try {
             process = Runtime.getRuntime().exec("cmd /c vol " + letter + ":");
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
             while ((line = in.readLine()) != null) {
                 if (line.toLowerCase().contains("serial number")) {
                     String[] strings = line.split(" ");
@@ -146,6 +165,35 @@ public class Client {
         } catch (SocketException | UnknownHostException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String encryptWithRSA(String tuple) {
+        byte[] keyBytes;
+
+        File publicKeyFile = new File("keys\\public.key");
+        if (publicKeyFile.exists() && publicKeyFile.isFile()) {
+            try {
+                inputStream = new FileInputStream(publicKeyFile);
+                keyBytes = inputStream.readAllBytes();
+
+                keyFactory = KeyFactory.getInstance("RSA");
+                EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
+                publicKey = keyFactory.generatePublic(publicKeySpec);
+
+                cipher = Cipher.getInstance("RSA");
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+                byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
+                byte[] encryptedBytes = cipher.doFinal(tupleBytes);
+
+                return Base64.getEncoder().encodeToString(encryptedBytes);
+
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException |
+                     InvalidKeyException | BadPaddingException | IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return "Something went wrong.";
     }
 
 
