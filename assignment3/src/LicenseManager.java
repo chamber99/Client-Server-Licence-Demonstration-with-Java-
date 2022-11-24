@@ -12,7 +12,6 @@ import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
 
 public class LicenseManager {
 
@@ -29,7 +28,7 @@ public class LicenseManager {
 
 
     public LicenseManager() {
-        createKeys();
+
 
     }
 
@@ -67,17 +66,17 @@ public class LicenseManager {
         return withoutPadding;
     }
 
-    public String processEncodedInfo(String string) {
-        byte[] decoded = Base64.getDecoder().decode(string);
+    public String processEncodedInfo(byte[] string) {
+
 
         try {
             cipher = Cipher.getInstance("RSA/ECB/NoPadding");
 
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            cipher.init(Cipher.DECRYPT_MODE, publicKey);
 
-            byte[] decrypted = cipher.doFinal(decoded);
+            byte[] decrypted = cipher.doFinal(string);
 
-            decrypted = clearPadding(decrypted);
+            //decrypted = clearPadding(decrypted);
 
             String result = new String(decrypted, StandardCharsets.UTF_8);
 

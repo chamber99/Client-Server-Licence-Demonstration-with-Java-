@@ -15,8 +15,8 @@ import java.security.PrivateKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.function.Consumer;
 
 public class Client {
@@ -36,6 +36,8 @@ public class Client {
 
 
     private String macAdress;
+
+    private LicenseManager manager;
     private String diskSerial;
     private String motherboardSerial;
     private String clientTuple;
@@ -44,10 +46,13 @@ public class Client {
     private FileOutputStream outputStream;
 
     public Client() throws IOException {
-        System.out.println(checkLicenseExistence());
-
+        getDeviceInformation();
+        this.manager = new LicenseManager();
+        manager.createKeys();
+        //System.out.println(checkLicenseExistence());
+        System.out.println();
         //getDeviceInformation(); //for testing
-        System.out.println(" ++++++++ ");
+        //System.out.println(" ++++++++ ");
         //System.out.println(getTuple());
         //licenseManager.accept(getTuple());
 
@@ -59,9 +64,12 @@ public class Client {
 
     }
 
-    public Consumer<String> licenseManager = (string -> {
-        LicenseManager manager;
+    public Consumer<byte[]> licenseManager = (string -> {
+        getDeviceInformation();
+        System.out.println(clientTuple + "\n");
+
         manager = new LicenseManager();
+        manager.createKeys();
         System.out.println(manager.processEncodedInfo(string));
     });
 
@@ -172,7 +180,7 @@ public class Client {
         }
     }
 
-    private String encryptWithRSA(String tuple) {
+    private byte[] encryptWithRSA(String tuple) {
         byte[] keyBytes;
 
         File privateKeyFile = new File("keys\\private.key");
@@ -183,25 +191,27 @@ public class Client {
 
                 keyFactory = KeyFactory.getInstance("RSA");
                 EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(keyBytes);
+                EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
+                //PublicKey publicKey = keyFactory.generatePublic(privateKeySpec);
 
                 cipher = Cipher.getInstance("RSA/ECB/NoPadding");
-                cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+                cipher.init(Cipher.ENCRYPT_MODE, manager.privateKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
 
-                tupleBytes = padPlainText(tupleBytes);
+                //tupleBytes = padPlainText(tupleBytes);
 
                 byte[] encryptedBytes = cipher.doFinal(tupleBytes);
 
-                return Base64.getEncoder().encodeToString(encryptedBytes);
+                return encryptedBytes;
 
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException |
                      InvalidKeyException | BadPaddingException | IllegalBlockSizeException ex) {
                 ex.printStackTrace();
             }
         }
-        return "Something went wrong.";
+        return null;
     }
 
     public byte[] padPlainText(byte[] plainText) {
