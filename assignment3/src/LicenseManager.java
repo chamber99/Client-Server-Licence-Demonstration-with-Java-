@@ -26,6 +26,8 @@ public class LicenseManager {
 
     Cipher cipher;
 
+    String acquiredTuple;
+
     KeyFactory keyFactory;
 
     FileInputStream fis;
@@ -78,8 +80,6 @@ public class LicenseManager {
     }
 
     public String processEncodedInfo(byte[] string) {
-
-
         try {
             cipher = Cipher.getInstance("RSA/ECB/NoPadding");
 
@@ -90,6 +90,9 @@ public class LicenseManager {
             //decrypted = clearPadding(decrypted);
 
             String result = new String(decrypted, StandardCharsets.UTF_8);
+
+            sign(hashWithMD5(result));
+
 
             return result;
 
@@ -114,10 +117,9 @@ public class LicenseManager {
 
             byte[] sign = privateSignature.sign();
 
-            client.verifyHash(publicKey, sign);
+            System.out.println(client.verifyHash(publicKey, sign));
 
             return sign;
-
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);

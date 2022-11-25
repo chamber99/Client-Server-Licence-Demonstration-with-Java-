@@ -22,45 +22,31 @@ public class Client {
     //TODO cidden yane
 
     private PrivateKey privateKey;
-
     Signature signature;
-
     private KeyFactory keyFactory;
-
     private Cipher cipher;
-
-
     private final String username = "bkisa_yedmrl";
     private final String serial = "brky-yedl-b465";
-
-
     private String macAdress;
-
     private LicenseManager manager;
     private String diskSerial;
     private String motherboardSerial;
     private String clientTuple;
     private File license;
     private FileInputStream inputStream;
-    private FileOutputStream outputStream;
 
     public Client() throws IOException {
         this.manager = new LicenseManager(this);
         manager.createKeys();
         getDeviceInformation();
 
-        //System.out.println(checkLicenseExistence());
-        System.out.println();
-        //getDeviceInformation(); //for testing
-        //System.out.println(" ++++++++ ");
-        //System.out.println(getTuple());
-        //licenseManager.accept(getTuple());
+        checkLicenseExistence();
 
-        clientTuple = getTuple();
+
 
         //System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
 
-        licenseManager.accept(encryptWithRSA(clientTuple));
+
 
     }
 
@@ -93,8 +79,7 @@ public class Client {
     }
 
     private void createLicense() {
-        getDeviceInformation();
-
+        licenseManager.accept(encryptWithRSA(clientTuple));
     }
 
     private String getTuple() {
@@ -108,6 +93,8 @@ public class Client {
         this.macAdress = getMacAdress();
         this.diskSerial = getdiskSerial('C');
         this.motherboardSerial = getMotherboardSerial();
+
+        this.clientTuple = getTuple();
 
         System.out.println("mac: " + macAdress);
         System.out.println("disk: " + diskSerial);
