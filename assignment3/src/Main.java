@@ -5,5 +5,7 @@ public class Main {
         System.out.println("Hello world!");
         Client c = new Client();
         //LicenseManager lm = new LicenseManager();
+
+        //TODO Printler ve commentler eklenecek.
     }
 }
