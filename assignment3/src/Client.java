@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -21,7 +20,7 @@ public class Client {
     //TODO RSA öğren amk
     //TODO cidden yane
 
-    private PrivateKey privateKey;
+    private PublicKey publicKey;
     Signature signature;
     private KeyFactory keyFactory;
     private Cipher cipher;
@@ -185,20 +184,18 @@ public class Client {
     private byte[] encryptWithRSA(String tuple) {
         byte[] keyBytes;
 
-        File privateKeyFile = new File("keys\\private.key");
-        if (privateKeyFile.exists() && privateKeyFile.isFile()) {
+        File publicKeyFile = new File("keys\\public.key");
+        if (publicKeyFile.exists() && publicKeyFile.isFile()) {
             try {
-                inputStream = new FileInputStream(privateKeyFile);
+                inputStream = new FileInputStream(publicKeyFile);
                 keyBytes = inputStream.readAllBytes();
 
                 keyFactory = KeyFactory.getInstance("RSA");
-                EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(keyBytes);
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
-                this.privateKey = keyFactory.generatePrivate(privateKeySpec);
-                //PublicKey publicKey = keyFactory.generatePublic(privateKeySpec);
+                this.publicKey = keyFactory.generatePublic(publicKeySpec);
 
                 cipher = Cipher.getInstance("RSA/ECB/NoPadding");
-                cipher.init(Cipher.ENCRYPT_MODE, manager.publicKey);
+                cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
 
