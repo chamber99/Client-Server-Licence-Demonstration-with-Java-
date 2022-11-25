@@ -25,7 +25,7 @@ public class Client {
     private KeyFactory keyFactory;
     private Cipher cipher;
     private final String username = "bkisa_yedmrl";
-    private final String serial = "brky-yedl-b465";
+    private final String serial = "brky-yedm-b465";
     private String macAdress;
     private LicenseManager manager;
     private String diskSerial;
@@ -56,7 +56,7 @@ public class Client {
     public Consumer<byte[]> licenseManagerConsumer = (encrypted -> {
         //getDeviceInformation();
         //System.out.println(clientTuple + "\n");
-        System.out.println(manager.processEncodedInfo(encrypted));
+        manager.processEncodedInfo(encrypted);
     });
 
     private boolean checkLicenseExistence() {
@@ -82,8 +82,9 @@ public class Client {
     }
 
     private void printEncrypted(byte[] encrypted) {
-        System.out.print("Client -- Encrypted License Text: ");
-        System.out.println(new String(encrypted, StandardCharsets.UTF_8));
+        //System.out.println("Client -- Encrypted License Text: " + new String(encrypted, StandardCharsets.UTF_8));
+        String enc = new String(encrypted, StandardCharsets.UTF_8);
+        System.out.println("Client -- Encrypted License Text: " + " " + enc);
     }
 
     public void printHashed(byte[] hashed) {
@@ -216,9 +217,6 @@ public class Client {
     }
 
     public byte[] padPlainText(byte[] plainText) {
-        for (byte b : plainText) {
-            System.out.println(b);
-        }
         byte[] byteArray = plainText;
         int remainder = byteArray.length % 8;
         byte[] padded = new byte[byteArray.length + (8 - remainder)];

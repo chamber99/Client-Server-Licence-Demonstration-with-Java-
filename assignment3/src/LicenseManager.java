@@ -97,7 +97,7 @@ public class LicenseManager {
 
             System.out.println("Server is being requested...");
             System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
-            System.out.println("Server -- Decrypted Text: " + new String(decrypted, StandardCharsets.UTF_8));
+            System.out.println("Server -- Decrypted Text: " + result);
             System.out.println("Server -- MD5 Plain License Text: " + new String(hashed, StandardCharsets.UTF_8));
 
 
