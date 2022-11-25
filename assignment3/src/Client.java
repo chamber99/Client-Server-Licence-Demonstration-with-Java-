@@ -36,24 +36,28 @@ public class Client {
     private FileInputStream inputStream;
 
     public Client() throws IOException {
-        this.manager = new LicenseManager(this);
-        manager.createKeys();
+        System.out.println("Client started...");
         getDeviceInformation();
+        System.out.println("My MAC: " + macAdress);
+        System.out.println("My Disk ID: " + diskSerial);
+        System.out.println("My Motherboard ID: " + motherboardSerial);
 
-        checkLicenseExistence();
+        this.manager = new LicenseManager(this);
+        System.out.println("LicenseManager service started...");
+        manager.createKeys();
+        clientTuple = getTuple();
+        boolean check = checkLicenseExistence();
+        System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
 
-
-
-        //System.out.println(clientTuple + "\n" + encryptWithRSA(clientTuple));
-
+        //System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
 
 
     }
 
-    public Consumer<byte[]> licenseManager = (string -> {
-        getDeviceInformation();
-        System.out.println(clientTuple + "\n");
-        System.out.println(manager.processEncodedInfo(string));
+    public Consumer<byte[]> licenseManagerConsumer = (encrypted -> {
+        //getDeviceInformation();
+        //System.out.println(clientTuple + "\n");
+        System.out.println(manager.processEncodedInfo(encrypted));
     });
 
     private boolean checkLicenseExistence() {
@@ -62,13 +66,13 @@ public class Client {
             try {
                 inputStream = new FileInputStream(license);
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
+                System.out.println("License is not found");
             }
             verifyLicense();
 
             return true;
         } else {
+            System.out.println("Client -- License file is not found");
             createLicense();
             return false;
         }
@@ -78,14 +82,22 @@ public class Client {
 
     }
 
+    private void printEncrypted(byte[] encrypted) {
+        System.out.print("Client -- Encrypted License Text: ");
+        System.out.println(new String(encrypted, StandardCharsets.UTF_8));
+    }
+
+    public void printHashed(byte[] hashed) {
+        System.out.print("Client -- MD5 License Text: ");
+        System.out.println(new String(hashed, StandardCharsets.UTF_8));
+    }
+
     private void createLicense() {
-        licenseManager.accept(encryptWithRSA(clientTuple));
+        System.out.println("Client -- Raw License Text: " + clientTuple);
+        licenseManagerConsumer.accept(encryptWithRSA(clientTuple));
     }
 
     private String getTuple() {
-        CharSequence seq = "nullSerialNumber";
-        motherboardSerial = motherboardSerial.replace(seq, "");
-        motherboardSerial = motherboardSerial.strip();
         return username + "$" + serial + "$" + macAdress + "$" + diskSerial + "$" + motherboardSerial;
     }
 
@@ -94,11 +106,15 @@ public class Client {
         this.diskSerial = getdiskSerial('C');
         this.motherboardSerial = getMotherboardSerial();
 
+        CharSequence seq = "nullSerialNumber";
+        motherboardSerial = motherboardSerial.replace(seq, "");
+        motherboardSerial = motherboardSerial.strip();
+
         this.clientTuple = getTuple();
 
-        System.out.println("mac: " + macAdress);
-        System.out.println("disk: " + diskSerial);
-        System.out.println("mobo: " + motherboardSerial);
+        //System.out.println("mac: " + macAdress);
+        //System.out.println("disk: " + diskSerial);
+        //System.out.println("mobo: " + motherboardSerial);
 
     }
 
@@ -116,6 +132,8 @@ public class Client {
             if (result.equalsIgnoreCase(" ")) {
                 System.out.println("Result is empty");
             } else {
+                CharSequence seq = "nullSerialNumber";
+                this.motherboardSerial = result;
                 return result;
             }
             input.close();
@@ -176,17 +194,19 @@ public class Client {
                 keyFactory = KeyFactory.getInstance("RSA");
                 EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(keyBytes);
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
-                privateKey = keyFactory.generatePrivate(privateKeySpec);
+                this.privateKey = keyFactory.generatePrivate(privateKeySpec);
                 //PublicKey publicKey = keyFactory.generatePublic(privateKeySpec);
 
                 cipher = Cipher.getInstance("RSA/ECB/NoPadding");
-                cipher.init(Cipher.ENCRYPT_MODE, manager.privateKey);
+                cipher.init(Cipher.ENCRYPT_MODE, manager.publicKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
 
                 //tupleBytes = padPlainText(tupleBytes);
 
                 byte[] encryptedBytes = cipher.doFinal(tupleBytes);
+
+                printEncrypted(encryptedBytes);
 
                 return encryptedBytes;
 

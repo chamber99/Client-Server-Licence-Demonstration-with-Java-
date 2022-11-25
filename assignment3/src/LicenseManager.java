@@ -79,19 +79,29 @@ public class LicenseManager {
         return withoutPadding;
     }
 
-    public String processEncodedInfo(byte[] string) {
+    public String processEncodedInfo(byte[] encrypted) {
         try {
             cipher = Cipher.getInstance("RSA/ECB/NoPadding");
 
-            cipher.init(Cipher.DECRYPT_MODE, publicKey);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-            byte[] decrypted = cipher.doFinal(string);
+            byte[] decrypted = cipher.doFinal(encrypted);
 
             //decrypted = clearPadding(decrypted);
 
             String result = new String(decrypted, StandardCharsets.UTF_8);
 
-            sign(hashWithMD5(result));
+            byte[] hashed = hashWithMD5(result);
+
+            client.printHashed(hashed);
+
+            System.out.println("Server is being requested...");
+            System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
+            System.out.println("Server -- Decrypted Text: " + new String(decrypted, StandardCharsets.UTF_8));
+            System.out.println("Server -- MD5 Plain License Text: " + new String(hashed, StandardCharsets.UTF_8));
+
+
+            sign(hashed);
 
 
             return result;
@@ -117,7 +127,10 @@ public class LicenseManager {
 
             byte[] sign = privateSignature.sign();
 
-            System.out.println(client.verifyHash(publicKey, sign));
+            System.out.println("Server -- Digital Signature: " + new String(sign, StandardCharsets.UTF_8));
+
+
+            //System.out.println(client.verifyHash(publicKey, sign));
 
             return sign;
 
