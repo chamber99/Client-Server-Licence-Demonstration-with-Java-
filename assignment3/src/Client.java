@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 public class Client {
     //TODO Printteki hataların sebebi hashlerde ve encryption sonuçlarındaki \n karakterleri ya da diğer özel karakterler.
+    //TODO bu yüzden yardımını bekleyeceğim.
 
     private PublicKey publicKey; // PublicKey of Client - created from public.key
     Signature signature; // For signing
@@ -33,8 +34,9 @@ public class Client {
     private String clientTuple; // The tuple created from system mac address and hardware serials.
     private File license; // The license.txt file.
     private FileInputStream inputStream; // FileInputStream for reading key files and license.txt
+    private FileOutputStream outputStream;
 
-    public Client() throws IOException {
+    public Client() throws IOException { // Constructor of Client. The whole process starts here with the initialization.
         System.out.println("Client started...");
         getDeviceInformation(); // Our method to get device related information.
         System.out.println("My MAC: " + macAdress);
@@ -45,19 +47,19 @@ public class Client {
         System.out.println("LicenseManager service started...");
         manager.createKeys(); // License manager creating keys
         clientTuple = getTuple(); // The tuple is created after collecting system information
+
         boolean check = checkLicenseExistence(); // Checking if licence exists.
         System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
-
         //System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
 
-
+        // writeNewLicense();
     }
 
-    public Consumer<byte[]> licenseManagerConsumer = (encrypted -> {
+    public Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
         manager.processEncodedInfo(encrypted);
     });
 
-    private boolean checkLicenseExistence() {
+    private boolean checkLicenseExistence() { // This method checks if the client has a valid license.
         license = new File("license.txt");
         if (license.exists() && license.isFile()) {
             try {
@@ -74,6 +76,29 @@ public class Client {
             return false;
         }
     }
+
+    public void writeNewLicense() {
+        boolean creation = false;
+
+        license = new File("license.txt");
+        try {
+            creation = license.createNewFile();
+
+            /*FileWriter writer = new FileWriter(license);
+            writer.write(content);
+            writer.close();*/
+            if (creation) {
+                outputStream = new FileOutputStream(license);
+                String content = "testing";
+                byte[] arr = content.getBytes();
+                outputStream.write(arr);
+                outputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void verifyLicense() {
         // I did not do the verification just yet.
@@ -110,11 +135,6 @@ public class Client {
         motherboardSerial = motherboardSerial.strip();
 
         this.clientTuple = getTuple();
-
-        //System.out.println("mac: " + macAdress);
-        //System.out.println("disk: " + diskSerial);
-        //System.out.println("mobo: " + motherboardSerial);
-
     }
 
     private String getMotherboardSerial() {
@@ -241,6 +261,5 @@ public class Client {
 
         return false;
     }
-
 
 }

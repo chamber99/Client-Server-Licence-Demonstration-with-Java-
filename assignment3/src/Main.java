@@ -7,5 +7,6 @@ public class Main {
         //LicenseManager lm = new LicenseManager();
 
         //TODO Printler ve commentler eklenecek.
+        //todo this is halfway done.
     }
 }
