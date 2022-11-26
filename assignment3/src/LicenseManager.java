@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
@@ -93,12 +94,14 @@ public class LicenseManager {
 
             byte[] hashed = hashWithMD5(result);
 
+            String md5PlainText = String.format("%032X", new BigInteger(1, hashed));
+
             client.printHashed(hashed);
 
             System.out.println("Server is being requested...");
             System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
             System.out.println("Server -- Decrypted Text: " + result);
-            System.out.println("Server -- MD5 Plain License Text: " + new String(hashed, StandardCharsets.UTF_8));
+            System.out.println("Server -- MD5 Plain License Text: " + md5PlainText);
 
 
             sign(hashed);

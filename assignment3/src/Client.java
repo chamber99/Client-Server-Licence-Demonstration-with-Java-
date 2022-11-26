@@ -3,6 +3,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -16,36 +17,35 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Client {
-    //TODO mac address falan bulmayı öğren DONE IT LMAO KEKW
-    //TODO RSA öğren amk
-    //TODO cidden yane
+    //TODO Printteki hataların sebebi hashlerde ve encryption sonuçlarındaki \n karakterleri ya da diğer özel karakterler.
 
-    private PublicKey publicKey;
-    Signature signature;
-    private KeyFactory keyFactory;
-    private Cipher cipher;
-    private final String username = "bkisa_yedmrl";
-    private final String serial = "brky-yedm-b465";
-    private String macAdress;
-    private LicenseManager manager;
-    private String diskSerial;
-    private String motherboardSerial;
-    private String clientTuple;
-    private File license;
-    private FileInputStream inputStream;
+    private PublicKey publicKey; // PublicKey of Client - created from public.key
+    Signature signature; // For signing
+    private KeyFactory keyFactory; // To create key
+    private Cipher cipher; // Cipher for RSA Encryption.
+    private String md5PlainText; // To print MD5 sum as a HEX string.
+    private final String username = "bkisa_yedmrl"; // Statically declared username
+    private final String serial = "brky-yedm-b465"; // Statically declared serial
+    private String macAdress; // Mac Adress
+    private LicenseManager manager; // Instance of LicenseManager.
+    private String diskSerial; // Disk Serial
+    private String motherboardSerial; // Motherboard Serial
+    private String clientTuple; // The tuple created from system mac address and hardware serials.
+    private File license; // The license.txt file.
+    private FileInputStream inputStream; // FileInputStream for reading key files and license.txt
 
     public Client() throws IOException {
         System.out.println("Client started...");
-        getDeviceInformation();
+        getDeviceInformation(); // Our method to get device related information.
         System.out.println("My MAC: " + macAdress);
         System.out.println("My Disk ID: " + diskSerial);
         System.out.println("My Motherboard ID: " + motherboardSerial);
 
-        this.manager = new LicenseManager(this);
+        this.manager = new LicenseManager(this); // Creating the LicenseManager instance
         System.out.println("LicenseManager service started...");
-        manager.createKeys();
-        clientTuple = getTuple();
-        boolean check = checkLicenseExistence();
+        manager.createKeys(); // License manager creating keys
+        clientTuple = getTuple(); // The tuple is created after collecting system information
+        boolean check = checkLicenseExistence(); // Checking if licence exists.
         System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
 
         //System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
@@ -54,8 +54,6 @@ public class Client {
     }
 
     public Consumer<byte[]> licenseManagerConsumer = (encrypted -> {
-        //getDeviceInformation();
-        //System.out.println(clientTuple + "\n");
         manager.processEncodedInfo(encrypted);
     });
 
@@ -78,7 +76,7 @@ public class Client {
     }
 
     private void verifyLicense() {
-
+        // I did not do the verification just yet.
     }
 
     private void printEncrypted(byte[] encrypted) {
@@ -89,7 +87,8 @@ public class Client {
 
     public void printHashed(byte[] hashed) {
         System.out.print("Client -- MD5 License Text: ");
-        System.out.println(new String(hashed, StandardCharsets.UTF_8));
+        this.md5PlainText = String.format("%032X%n", new BigInteger(1, hashed));
+        System.out.print(this.md5PlainText);
     }
 
     private void createLicense() {
