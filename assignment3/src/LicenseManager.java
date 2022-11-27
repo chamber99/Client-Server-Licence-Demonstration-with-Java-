@@ -132,8 +132,12 @@ public class LicenseManager {
 
             System.out.println("Server -- Digital Signature: " + new String(sign, StandardCharsets.UTF_8));
 
-
+            boolean verify = client.verifyHashfromServer(sign);
             //System.out.println(client.verifyHash(publicKey, sign));
+
+            if (verify) {
+                client.writeNewLicense();
+            }
 
             return sign;
 

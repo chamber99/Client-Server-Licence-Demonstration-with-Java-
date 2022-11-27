@@ -23,6 +23,7 @@ public class Client {
     private PublicKey publicKey; // PublicKey of Client - created from public.key
     Signature signature; // For signing
     private KeyFactory keyFactory; // To create key
+    private MessageDigest messageDigest;
     private Cipher cipher; // Cipher for RSA Encryption.
     private String md5PlainText; // To print MD5 sum as a HEX string.
     private final String username = "bkisa_yedmrl"; // Statically declared username
@@ -59,6 +60,20 @@ public class Client {
         manager.processEncodedInfo(encrypted);
     });
 
+    public boolean verifyHashfromServer(byte[] hashed) {
+        boolean result = verifyHash(publicKey, hashed);
+        if (result) {
+            System.out.println("License is verified.");
+            // TODO subject to changes.
+        } else {
+            System.out.println("License is corrupted!");
+            createLicense();
+        }
+
+        return result;
+    }
+
+
     private boolean checkLicenseExistence() { // This method checks if the client has a valid license.
         license = new File("license.txt");
         if (license.exists() && license.isFile()) {
@@ -89,17 +104,14 @@ public class Client {
             writer.close();*/
             if (creation) {
                 outputStream = new FileOutputStream(license);
-                String content = "testing";
-                byte[] arr = content.getBytes();
-                outputStream.write(arr);
+                byte[] hashed = hashWithMD5(getTuple());
+                outputStream.write(hashed);
                 outputStream.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
     private void verifyLicense() {
         // I did not do the verification just yet.
     }
@@ -245,6 +257,12 @@ public class Client {
             padded[index++] = b;
         }
         return padded;
+    }
+
+    public byte[] hashWithMD5(String result) {
+        byte[] hash;
+        hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
+        return hash;
     }
 
     public boolean verifyHash(PublicKey publicKey, byte[] input) {
