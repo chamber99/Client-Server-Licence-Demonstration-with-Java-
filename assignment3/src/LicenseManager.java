@@ -82,7 +82,7 @@ public class LicenseManager {
 
     public String processEncodedInfo(byte[] encrypted) {
         try {
-            cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+            cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
 

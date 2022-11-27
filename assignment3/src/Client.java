@@ -63,11 +63,11 @@ public class Client {
     public boolean verifyHashfromServer(byte[] hashed) {
         boolean result = verifyHash(publicKey, hashed);
         if (result) {
-            System.out.println("License is verified.");
+            System.out.println("Client -- License is verified.");
             // TODO subject to changes.
         } else {
-            System.out.println("License is corrupted!");
-            createLicense();
+            System.out.println("Client -- License is corrupted!");
+            //createLicense();
         }
 
         return result;
@@ -226,7 +226,7 @@ public class Client {
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
                 this.publicKey = keyFactory.generatePublic(publicKeySpec);
 
-                cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+                cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
