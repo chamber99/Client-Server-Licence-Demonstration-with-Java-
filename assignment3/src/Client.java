@@ -92,7 +92,7 @@ public class Client {
             }
 
             //System.out.println("Client -- License is verified.");
-            System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
+            System.out.println("Client -- Succeed. The license file content is secured and signed by the server.");
 
         } else {
             System.out.println("Client -- License is corrupted!");
