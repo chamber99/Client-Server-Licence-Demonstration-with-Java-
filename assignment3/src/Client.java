@@ -142,17 +142,22 @@ public class Client {
         //System.out.println("haha" + this.clientTuple);
         try {
             byte[] license = inputStream.readAllBytes();
-            String licenseText = new String(license, StandardCharsets.UTF_8);
-            String[] split = licenseText.split("#####sign#####");
+            //String licenseText = new String(license, StandardCharsets.UTF_8);
+            //String[] split = licenseText.split("#####sign#####");
 
+
+            byte[] signBytes = new byte[128];
+            System.arraycopy(license, 46, signBytes, 0, 128);
+
+            String[] split = new String(license, StandardCharsets.UTF_8).split("#####sign#####");
             boolean hashCorrect = String.format("%032X", new BigInteger(1, md5Hash)).equals(split[0]);
-            boolean verify = verifyHash(publicKey, split[1].getBytes());
+            boolean verify = verifyHash(publicKey, signBytes);
 
             if (hashCorrect && verify) {
                 System.out.println("Client -- License is valid");
             } else {
                 System.out.println("Client -- License is invalid!");
-                //createLicense();
+                createLicense();
                 System.out.println("hash: " + hashCorrect);
                 System.out.println("verify: " + verify);
             }
