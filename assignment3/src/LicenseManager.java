@@ -130,7 +130,9 @@ public class LicenseManager {
 
             byte[] sign = privateSignature.sign();
 
-            System.out.println("Server -- Digital Signature: " + new String(sign, StandardCharsets.UTF_8));
+            System.out.printf("Server -- Digital Signature: ");
+            String signPlainText = String.format("%032X", new BigInteger(1, sign));
+            System.out.println(signPlainText);
 
             boolean verify = client.verifyHashfromServer(sign);
             //System.out.println(client.verifyHash(publicKey, sign));

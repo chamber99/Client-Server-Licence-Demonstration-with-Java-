@@ -44,6 +44,11 @@ public class Client {
         System.out.println("My Disk ID: " + diskSerial);
         System.out.println("My Motherboard ID: " + motherboardSerial);
 
+        try {
+            this.messageDigest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
         this.manager = new LicenseManager(this); // Creating the LicenseManager instance
         System.out.println("LicenseManager service started...");
         manager.createKeys(); // License manager creating keys
@@ -60,8 +65,12 @@ public class Client {
         manager.processEncodedInfo(encrypted);
     });
 
-    public boolean verifyHashfromServer(byte[] hashed) {
-        boolean result = verifyHash(publicKey, hashed);
+    public boolean verifyHashfromServer(byte[] signature) {
+
+        this.md5PlainText = String.format("%032X", new BigInteger(1, signature));
+
+
+        boolean result = verifyHash(publicKey, signature);
         if (result) {
             System.out.println("Client -- License is verified.");
             // TODO subject to changes.
@@ -105,6 +114,8 @@ public class Client {
             if (creation) {
                 outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
+                this.md5PlainText = String.format("%032X", new BigInteger(1, hashed));
+
                 outputStream.write(hashed);
                 outputStream.close();
             }
@@ -269,7 +280,7 @@ public class Client {
         try {
             signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
-
+            signature.update(hashWithMD5(this.clientTuple));
             boolean verify = signature.verify(input);
             return verify;
 
