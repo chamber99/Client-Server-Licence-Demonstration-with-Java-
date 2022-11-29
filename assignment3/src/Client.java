@@ -17,8 +17,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Client {
-    //TODO Printteki hataların sebebi hashlerde ve encryption sonuçlarındaki \n karakterleri ya da diğer özel karakterler.
-    //TODO bu yüzden yardımını bekleyeceğim.
+
 
     private PublicKey publicKey; // PublicKey of Client - created from public.key
 
@@ -94,7 +93,7 @@ public class Client {
 
             //System.out.println("Client -- License is verified.");
             System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
-            // TODO subject to changes.
+
         } else {
             System.out.println("Client -- License is corrupted!");
             //createLicense();

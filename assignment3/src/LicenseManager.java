@@ -47,8 +47,8 @@ public class LicenseManager {
     }
 
     public void createKeys() {
-        File privateKeyFile = new File("keys\\private.key"); //TODO burası dosyalar srcdeymiş gibi ayarlanacak
-        File publicKeyFile = new File("keys\\public.key"); //TODO burası dosyalar srcdeymiş gibi ayarlanacak
+        File privateKeyFile = new File("keys\\private.key");
+        File publicKeyFile = new File("keys\\public.key");
         if (privateKeyFile.exists() && publicKeyFile.exists() && privateKeyFile.isFile() && publicKeyFile.isFile()) {
             try {
                 fis = new FileInputStream(privateKeyFile);
