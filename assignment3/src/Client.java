@@ -56,9 +56,21 @@ public class Client {
 
         boolean check = checkLicenseExistence(); // Checking if licence exists.
         System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
+
+        if (check) {
+            verifyLicense();
+        } else {
+            //System.out.println("Client -- License file is not found");
+            createLicense();
+        }
+
         //System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
 
         // writeNewLicense();
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
     }
 
     public Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
@@ -89,19 +101,16 @@ public class Client {
             try {
                 inputStream = new FileInputStream(license);
             } catch (FileNotFoundException e) {
-                System.out.println("License is not found");
+                e.printStackTrace();
             }
-            verifyLicense();
-
             return true;
         } else {
-            System.out.println("Client -- License file is not found");
-            createLicense();
+
             return false;
         }
     }
 
-    public void writeNewLicense() {
+    public void writeNewLicense(byte[] signature) {
         boolean creation = false;
 
         license = new File("license.txt");
@@ -115,8 +124,10 @@ public class Client {
                 outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
                 this.md5PlainText = String.format("%032X", new BigInteger(1, hashed));
-
-                outputStream.write(hashed);
+                outputStream.write(this.md5PlainText.getBytes(StandardCharsets.UTF_8));
+                String divisor = "#####sign#####";
+                outputStream.write(divisor.getBytes(StandardCharsets.UTF_8));
+                outputStream.write(signature);
                 outputStream.close();
             }
         } catch (IOException e) {
@@ -124,7 +135,34 @@ public class Client {
         }
     }
     private void verifyLicense() {
-        // I did not do the verification just yet.
+        this.clientTuple = getTuple();
+        byte[] md5Hash = hashWithMD5(this.clientTuple);
+
+
+        //System.out.println("haha" + this.clientTuple);
+        try {
+            byte[] license = inputStream.readAllBytes();
+            String licenseText = new String(license, StandardCharsets.UTF_8);
+            String[] split = licenseText.split("#####sign#####");
+
+            boolean hashCorrect = String.format("%032X", new BigInteger(1, md5Hash)).equals(split[0]);
+            boolean verify = verifyHash(publicKey, split[1].getBytes());
+
+            if (hashCorrect && verify) {
+                System.out.println("Client -- License is valid");
+            } else {
+                System.out.println("Client -- License is invalid!");
+                //createLicense();
+                System.out.println("hash: " + hashCorrect);
+                System.out.println("verify: " + verify);
+            }
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     private void printEncrypted(byte[] encrypted) {

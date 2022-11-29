@@ -64,6 +64,8 @@ public class LicenseManager {
                 publicKey = keyFactory.generatePublic(publicKeySpec);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
 
+                client.setPublicKey(this.publicKey);
+
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
             }
@@ -138,7 +140,7 @@ public class LicenseManager {
             //System.out.println(client.verifyHash(publicKey, sign));
 
             if (verify) {
-                client.writeNewLicense();
+                client.writeNewLicense(sign);
             }
 
             return sign;
