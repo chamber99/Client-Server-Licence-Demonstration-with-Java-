@@ -101,7 +101,11 @@ public class LicenseManager {
             client.printHashed(hashed);
 
             System.out.println("Server is being requested...");
-            System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
+
+            String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
+
+            //System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
+            System.out.println("Server -- Incoming Encrypted Text: " + encryptedHex);
             System.out.println("Server -- Decrypted Text: " + result);
             System.out.println("Server -- MD5 Plain License Text: " + md5PlainText);
 

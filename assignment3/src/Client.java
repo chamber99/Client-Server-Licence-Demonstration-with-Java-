@@ -21,6 +21,8 @@ public class Client {
     //TODO bu yüzden yardımını bekleyeceğim.
 
     private PublicKey publicKey; // PublicKey of Client - created from public.key
+
+    private boolean licenceRecreated;
     Signature signature; // For signing
     private KeyFactory keyFactory; // To create key
     private MessageDigest messageDigest;
@@ -38,6 +40,7 @@ public class Client {
     private FileOutputStream outputStream;
 
     public Client() throws IOException { // Constructor of Client. The whole process starts here with the initialization.
+        licenceRecreated = false;
         System.out.println("Client started...");
         getDeviceInformation(); // Our method to get device related information.
         System.out.println("My MAC: " + macAdress);
@@ -84,7 +87,13 @@ public class Client {
 
         boolean result = verifyHash(publicKey, signature);
         if (result) {
-            System.out.println("Client -- License is verified.");
+            File lic = new File("license.txt");
+            if (!lic.exists()) {
+                System.out.println("Client -- License is not found");
+            }
+
+            //System.out.println("Client -- License is verified.");
+            System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
             // TODO subject to changes.
         } else {
             System.out.println("Client -- License is corrupted!");
@@ -120,7 +129,7 @@ public class Client {
             /*FileWriter writer = new FileWriter(license);
             writer.write(content);
             writer.close();*/
-            if (creation) {
+            if (creation || licenceRecreated) {
                 outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
                 this.md5PlainText = String.format("%032X", new BigInteger(1, hashed));
@@ -154,12 +163,12 @@ public class Client {
             boolean verify = verifyHash(publicKey, signBytes);
 
             if (hashCorrect && verify) {
-                System.out.println("Client -- License is valid");
+                System.out.println("Client -- Succeed. The license is correct.");
             } else {
-                System.out.println("Client -- License is invalid!");
+                licenceRecreated = true;
+                System.out.println("Client -- The license file has been broken!");
+                System.out.println("Client -- Attempting to create new license for the user.");
                 createLicense();
-                System.out.println("hash: " + hashCorrect);
-                System.out.println("verify: " + verify);
             }
 
 
@@ -172,8 +181,10 @@ public class Client {
 
     private void printEncrypted(byte[] encrypted) {
         //System.out.println("Client -- Encrypted License Text: " + new String(encrypted, StandardCharsets.UTF_8));
-        String enc = new String(encrypted, StandardCharsets.UTF_8);
-        System.out.println("Client -- Encrypted License Text: " + " " + enc);
+
+        String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
+        //System.out.println("Client -- Encrypted License Text: " + new String(encrypted);
+        System.out.println("Client -- Encrypted License Text: " + encryptedHex);
     }
 
     public void printHashed(byte[] hashed) {
