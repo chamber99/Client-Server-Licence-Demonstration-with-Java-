@@ -4,7 +4,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -15,25 +14,14 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 public class LicenseManager {
-
     PrivateKey privateKey;
-
     Client client;
-
     Signature privateSignature;
     MessageDigest messageDigest;
-
     PublicKey publicKey;
-
     Cipher cipher;
-
-    String acquiredTuple;
-
     KeyFactory keyFactory;
-
     FileInputStream fis;
-    FileOutputStream fos;
-
 
     public LicenseManager(Client clientVar) {
         this.client = clientVar;
@@ -70,16 +58,6 @@ public class LicenseManager {
                 e.printStackTrace();
             }
         }
-    }
-
-    public byte[] clearPadding(byte[] padded) {
-        byte lastByte = padded[padded.length - 1];
-        int plainTextLength = padded.length - lastByte;
-        byte[] withoutPadding = new byte[plainTextLength];
-        for (int i = 0; i < plainTextLength; i++) {
-            withoutPadding[i] = padded[i];
-        }
-        return withoutPadding;
     }
 
     public String processEncodedInfo(byte[] encrypted) {
@@ -127,7 +105,6 @@ public class LicenseManager {
         return hash;
     }
 
-
     public byte[] sign(byte[] hash) {
         try {
             privateSignature = Signature.getInstance("SHA256withRSA");
@@ -141,7 +118,7 @@ public class LicenseManager {
             System.out.println(signPlainText);
 
             boolean verify = client.verifyHashfromServer(sign);
-            //System.out.println(client.verifyHash(publicKey, sign));
+
 
             if (verify) {
                 client.writeNewLicense(sign);
@@ -154,10 +131,5 @@ public class LicenseManager {
         }
 
 
-    }
-
-
-    public void processTuple(String string) {
-        System.out.println(string);
     }
 }

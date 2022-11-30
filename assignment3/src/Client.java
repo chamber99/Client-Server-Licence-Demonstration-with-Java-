@@ -16,10 +16,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.function.Consumer;
 
 public class Client {
-
-
     private PublicKey publicKey; // PublicKey of Client - created from public.key
-
     private boolean licenceRecreated;
     Signature signature; // For signing
     private KeyFactory keyFactory; // To create key
@@ -89,18 +86,12 @@ public class Client {
             if (!lic.exists()) {
                 System.out.println("Client -- License is not found");
             }
-
-            //System.out.println("Client -- License is verified.");
             System.out.println("Client -- Succeed. The license file content is secured and signed by the server.");
-
         } else {
             System.err.println("Client -- License is corrupted!");
-            //createLicense();
         }
-
         return result;
     }
-
 
     private boolean checkLicenseExistence() { // This method checks if the client has a valid license.
         license = new File("license.txt");
@@ -123,10 +114,6 @@ public class Client {
         license = new File("license.txt");
         try {
             creation = license.createNewFile();
-
-            /*FileWriter writer = new FileWriter(license);
-            writer.write(content);
-            writer.close();*/
             if (creation || licenceRecreated) {
                 outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
@@ -146,14 +133,8 @@ public class Client {
         this.clientTuple = getTuple();
         byte[] md5Hash = hashWithMD5(this.clientTuple);
 
-
-        //System.out.println("haha" + this.clientTuple);
         try {
             byte[] license = inputStream.readAllBytes();
-            //String licenseText = new String(license, StandardCharsets.UTF_8);
-            //String[] split = licenseText.split("#####sign#####");
-
-
             byte[] signBytes = new byte[128];
             System.arraycopy(license, 46, signBytes, 0, 128);
 
@@ -169,23 +150,14 @@ public class Client {
                 System.out.println("Client -- Attempting to create new license for the user.");
                 createLicense();
             }
-
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
     }
-
     private void printEncrypted(byte[] encrypted) {
-        //System.out.println("Client -- Encrypted License Text: " + new String(encrypted, StandardCharsets.UTF_8));
-
         String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
-        //System.out.println("Client -- Encrypted License Text: " + new String(encrypted);
         System.out.println("Client -- Encrypted License Text: " + encryptedHex);
     }
-
     public void printHashed(byte[] hashed) {
         System.out.print("Client -- MD5 License Text: ");
         this.md5PlainText = String.format("%032X%n", new BigInteger(1, hashed));
@@ -196,14 +168,12 @@ public class Client {
         System.out.println("Client -- Raw License Text: " + clientTuple);
         licenseManagerConsumer.accept(encryptWithRSA(clientTuple));
     }
-
     private String getTuple() {
         return username + "$" + serial + "$" + macAdress + "$" + diskSerial + "$" + motherboardSerial;
     }
-
     private void getDeviceInformation() {
         this.macAdress = getMacAdress();
-        this.diskSerial = getdiskSerial('C');
+        this.diskSerial = getDiskSerial('C');
         this.motherboardSerial = getMotherboardSerial();
 
         CharSequence seq = "nullSerialNumber";
@@ -222,7 +192,6 @@ public class Client {
             while ((line = input.readLine()) != null) {
                 result += line;
             }
-
             assert result != null;
             if (result.equalsIgnoreCase(" ")) {
                 System.out.println("Result is empty");
@@ -237,7 +206,7 @@ public class Client {
         return "null";
     }
 
-    public String getdiskSerial(Character letter) {
+    public String getDiskSerial(Character letter) {
         String line;
         String serial = null;
         Process process;
@@ -265,7 +234,8 @@ public class Client {
             networkInterface = NetworkInterface.getByInetAddress(localHost);
             byte[] hardwareAddress = networkInterface.getHardwareAddress();
             if (hardwareAddress == null) {
-                System.err.println("Client -- Connection cannot be established. Please ensure that you have a proper Internet connection.");
+                System.err.println("Client -- Connection cannot be established. " +
+                        "Please ensure that you have a proper Internet connection.");
                 System.err.println("Terminating process..");
                 System.exit(-1);
             }
@@ -299,8 +269,6 @@ public class Client {
                 cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
-
-                //tupleBytes = padPlainText(tupleBytes);
 
                 byte[] encryptedBytes = cipher.doFinal(tupleBytes);
 
