@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 public class Client {
     private PublicKey publicKey; // PublicKey of Client - created from public.key
     private boolean licenceRecreated;
-    Signature signature; // For signing
+    private Signature signature; // For signing
     private KeyFactory keyFactory; // To create key
     private MessageDigest messageDigest;
     private Cipher cipher; // Cipher for RSA Encryption.
@@ -79,7 +79,6 @@ public class Client {
 
         this.md5PlainText = String.format("%032X", new BigInteger(1, signature));
 
-
         boolean result = verifyHash(publicKey, signature);
         if (result) {
             File lic = new File("license.txt");
@@ -87,8 +86,6 @@ public class Client {
                 System.out.println("Client -- License is not found");
             }
             System.out.println("Client -- Succeed. The license file content is secured and signed by the server.");
-        } else {
-            System.err.println("Client -- License is corrupted!");
         }
         return result;
     }
