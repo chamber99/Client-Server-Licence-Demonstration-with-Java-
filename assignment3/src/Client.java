@@ -13,7 +13,6 @@ import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Client {
@@ -38,7 +37,7 @@ public class Client {
     private FileInputStream inputStream; // FileInputStream for reading key files and license.txt
     private FileOutputStream outputStream;
 
-    public Client() throws IOException { // Constructor of Client. The whole process starts here with the initialization.
+    public Client() { // Constructor of Client. The whole process starts here with the initialization.
         licenceRecreated = false;
         System.out.println("Client started...");
         getDeviceInformation(); // Our method to get device related information.
@@ -92,7 +91,7 @@ public class Client {
             }
 
             //System.out.println("Client -- License is verified.");
-            System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
+            System.out.println("Client -- Succeed. The license file content is secured and signed by the server.");
 
         } else {
             System.err.println("Client -- License is corrupted!");
@@ -119,7 +118,7 @@ public class Client {
     }
 
     public void writeNewLicense(byte[] signature) {
-        boolean creation = false;
+        boolean creation;
 
         license = new File("license.txt");
         try {
@@ -142,6 +141,7 @@ public class Client {
             e.printStackTrace();
         }
     }
+
     private void verifyLicense() {
         this.clientTuple = getTuple();
         byte[] md5Hash = hashWithMD5(this.clientTuple);
@@ -227,7 +227,6 @@ public class Client {
             if (result.equalsIgnoreCase(" ")) {
                 System.out.println("Result is empty");
             } else {
-                CharSequence seq = "nullSerialNumber";
                 this.motherboardSerial = result;
                 return result;
             }
@@ -258,8 +257,8 @@ public class Client {
     }
 
     private String getMacAdress() {
-        InetAddress localHost = null;
-        NetworkInterface networkInterface = null;
+        InetAddress localHost;
+        NetworkInterface networkInterface;
 
         try {
             localHost = InetAddress.getLocalHost();
@@ -317,17 +316,6 @@ public class Client {
         return null;
     }
 
-    public byte[] padPlainText(byte[] plainText) {
-        byte[] byteArray = plainText;
-        int remainder = byteArray.length % 8;
-        byte[] padded = new byte[byteArray.length + (8 - remainder)];
-        Arrays.fill(padded, (byte) (8 - remainder));
-        int index = 0;
-        for (byte b : byteArray) {
-            padded[index++] = b;
-        }
-        return padded;
-    }
 
     public byte[] hashWithMD5(String result) {
         byte[] hash;
@@ -340,8 +328,7 @@ public class Client {
             signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
             signature.update(hashWithMD5(this.clientTuple));
-            boolean verify = signature.verify(input);
-            return verify;
+            return signature.verify(input);
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
