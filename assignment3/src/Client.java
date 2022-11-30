@@ -95,7 +95,7 @@ public class Client {
             System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
 
         } else {
-            System.out.println("Client -- License is corrupted!");
+            System.err.println("Client -- License is corrupted!");
             //createLicense();
         }
 
@@ -165,7 +165,7 @@ public class Client {
                 System.out.println("Client -- Succeed. The license is correct.");
             } else {
                 licenceRecreated = true;
-                System.out.println("Client -- The license file has been broken!");
+                System.err.println("Client -- The license file has been broken!");
                 System.out.println("Client -- Attempting to create new license for the user.");
                 createLicense();
             }
@@ -265,6 +265,11 @@ public class Client {
             localHost = InetAddress.getLocalHost();
             networkInterface = NetworkInterface.getByInetAddress(localHost);
             byte[] hardwareAddress = networkInterface.getHardwareAddress();
+            if (hardwareAddress == null) {
+                System.err.println("Client -- Connection cannot be established. Please ensure that you have a proper Internet connection.");
+                System.err.println("Terminating process..");
+                System.exit(-1);
+            }
 
             String[] hexadecimal = new String[hardwareAddress.length];
             for (int i = 0; i < hardwareAddress.length; i++) {
@@ -273,8 +278,9 @@ public class Client {
             return String.join("-", hexadecimal);
 
         } catch (SocketException | UnknownHostException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
+        return "Mac address cannot be gathered!";
     }
 
     private byte[] encryptWithRSA(String tuple) {
