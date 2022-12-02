@@ -16,25 +16,23 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.function.Consumer;
 
 public class Client {
-    private PublicKey publicKey; // PublicKey of Client - created from public.key
-    private boolean licenceRecreated;
-    private Signature signature; // For signing
-    private KeyFactory keyFactory; // To create key
-    private MessageDigest messageDigest;
-    private Cipher cipher; // Cipher for RSA Encryption.
-    private String md5PlainText; // To print MD5 sum as a HEX string.
-    private final String username = "bkisa_yedmrl"; // Statically declared username
-    private final String serial = "brky-yedm-b465"; // Statically declared serial
-    private String macAdress; // Mac Adress
-    private LicenseManager manager; // Instance of LicenseManager.
-    private String diskSerial; // Disk Serial
-    private String motherboardSerial; // Motherboard Serial
-    private String clientTuple; // The tuple created from system mac address and hardware serials.
-    private File license; // The license.txt file.
-    private FileInputStream inputStream; // FileInputStream for reading key files and license.txt
-    private FileOutputStream outputStream;
+    private static PublicKey publicKey; // PublicKey of Client - created from public.key
+    private static boolean licenceRecreated;
+    private static KeyFactory keyFactory; // To create key
+    private static MessageDigest messageDigest;
+    private static String md5PlainText; // To print MD5 sum as a HEX string.
+    private static final String username = "bkisa_yedmrl"; // Statically declared username
+    private static final String serial = "brky-yedm-b465"; // Statically declared serial
+    private static String macAdress; // Mac Adress
+    private static LicenseManager manager; // Instance of LicenseManager.
+    private static String diskSerial; // Disk Serial
+    private static String motherboardSerial; // Motherboard Serial
+    private static String clientTuple; // The tuple created from system mac address and hardware serials.
+    private static File license; // The license.txt file.
+    private static FileInputStream inputStream; // FileInputStream for reading key files and license.txt
 
-    public Client() { // Constructor of Client. The whole process starts here with the initialization.
+    public static void main(String[] args) { // Constructor of Client. The whole process starts here with the initialization.
+        getPublicKey();
         licenceRecreated = false;
         System.out.println("Client started...");
         getDeviceInformation(); // Our method to get device related information.
@@ -43,11 +41,11 @@ public class Client {
         System.out.println("My Motherboard ID: " + motherboardSerial);
 
         try {
-            this.messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        this.manager = new LicenseManager(this); // Creating the LicenseManager instance
+        manager = new LicenseManager(); // Creating the LicenseManager instance
         System.out.println("LicenseManager service started...");
         manager.createKeys(); // License manager creating keys
         clientTuple = getTuple(); // The tuple is created after collecting system information
@@ -67,17 +65,31 @@ public class Client {
         // writeNewLicense();
     }
 
-    public void setPublicKey(PublicKey publicKey) {
-        this.publicKey = publicKey;
+    public static void getPublicKey() {
+        File publicKeyFile = new File("keys\\public.key");
+        try {
+            inputStream = new FileInputStream(publicKeyFile);
+            byte[] keyBytes = inputStream.readAllBytes();
+
+            keyFactory = KeyFactory.getInstance("RSA");
+            EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
+            publicKey = keyFactory.generatePublic(publicKeySpec);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
-    public Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
+    public static Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
         manager.processEncodedInfo(encrypted);
     });
 
-    public boolean verifyHashfromServer(byte[] signature) {
+    public static boolean verifyHashfromServer(byte[] signature) {
 
-        this.md5PlainText = String.format("%032X", new BigInteger(1, signature));
+        md5PlainText = String.format("%032X", new BigInteger(1, signature));
 
         boolean result = verifyHash(publicKey, signature);
         if (result) {
@@ -90,7 +102,7 @@ public class Client {
         return result;
     }
 
-    private boolean checkLicenseExistence() { // This method checks if the client has a valid license.
+    private static boolean checkLicenseExistence() { // This method checks if the client has a valid license.
         license = new File("license.txt");
         if (license.exists() && license.isFile()) {
             try {
@@ -105,17 +117,17 @@ public class Client {
         }
     }
 
-    public void writeNewLicense(byte[] signature) {
+    public static void writeNewLicense(byte[] signature) {
         boolean creation;
 
         license = new File("license.txt");
         try {
             creation = license.createNewFile();
             if (creation || licenceRecreated) {
-                outputStream = new FileOutputStream(license);
+                FileOutputStream outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
-                this.md5PlainText = String.format("%032X", new BigInteger(1, hashed));
-                outputStream.write(this.md5PlainText.getBytes(StandardCharsets.UTF_8));
+                md5PlainText = String.format("%032X", new BigInteger(1, hashed));
+                outputStream.write(md5PlainText.getBytes(StandardCharsets.UTF_8));
                 String divisor = "#####sign#####";
                 outputStream.write(divisor.getBytes(StandardCharsets.UTF_8));
                 outputStream.write(signature);
@@ -126,9 +138,9 @@ public class Client {
         }
     }
 
-    private void verifyLicense() {
-        this.clientTuple = getTuple();
-        byte[] md5Hash = hashWithMD5(this.clientTuple);
+    private static void verifyLicense() {
+        clientTuple = getTuple();
+        byte[] md5Hash = hashWithMD5(clientTuple);
 
         try {
             byte[] license = inputStream.readAllBytes();
@@ -151,36 +163,40 @@ public class Client {
             throw new RuntimeException(e);
         }
     }
-    private void printEncrypted(byte[] encrypted) {
+
+    private static void printEncrypted(byte[] encrypted) {
         String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
         System.out.println("Client -- Encrypted License Text: " + encryptedHex);
     }
-    public void printHashed(byte[] hashed) {
+
+    public static void printHashed(byte[] hashed) {
         System.out.print("Client -- MD5 License Text: ");
-        this.md5PlainText = String.format("%032X%n", new BigInteger(1, hashed));
-        System.out.print(this.md5PlainText);
+        md5PlainText = String.format("%032X%n", new BigInteger(1, hashed));
+        System.out.print(md5PlainText);
     }
 
-    private void createLicense() {
+    private static void createLicense() {
         System.out.println("Client -- Raw License Text: " + clientTuple);
         licenseManagerConsumer.accept(encryptWithRSA(clientTuple));
     }
-    private String getTuple() {
+
+    private static String getTuple() {
         return username + "$" + serial + "$" + macAdress + "$" + diskSerial + "$" + motherboardSerial;
     }
-    private void getDeviceInformation() {
-        this.macAdress = getMacAdress();
-        this.diskSerial = getDiskSerial('C');
-        this.motherboardSerial = getMotherboardSerial();
+
+    private static void getDeviceInformation() {
+        macAdress = getMacAdress();
+        diskSerial = getDiskSerial('C');
+        motherboardSerial = getMotherboardSerial();
 
         CharSequence seq = "nullSerialNumber";
         motherboardSerial = motherboardSerial.replace(seq, "");
         motherboardSerial = motherboardSerial.strip();
 
-        this.clientTuple = getTuple();
+        clientTuple = getTuple();
     }
 
-    private String getMotherboardSerial() {
+    private static String getMotherboardSerial() {
         try {
             String result = null;
             Process p = Runtime.getRuntime().exec("wmic baseboard get serialnumber");
@@ -193,7 +209,7 @@ public class Client {
             if (result.equalsIgnoreCase(" ")) {
                 System.out.println("Result is empty");
             } else {
-                this.motherboardSerial = result;
+                motherboardSerial = result;
                 return result;
             }
             input.close();
@@ -203,7 +219,7 @@ public class Client {
         return "null";
     }
 
-    public String getDiskSerial(Character letter) {
+    public static String getDiskSerial(Character letter) {
         String line;
         String serial = null;
         Process process;
@@ -222,7 +238,7 @@ public class Client {
         return serial;
     }
 
-    private String getMacAdress() {
+    private static String getMacAdress() {
         InetAddress localHost;
         NetworkInterface networkInterface;
 
@@ -249,7 +265,7 @@ public class Client {
         return "Mac address cannot be gathered!";
     }
 
-    private byte[] encryptWithRSA(String tuple) {
+    private static byte[] encryptWithRSA(String tuple) {
         byte[] keyBytes;
 
         File publicKeyFile = new File("keys\\public.key");
@@ -260,10 +276,11 @@ public class Client {
 
                 keyFactory = KeyFactory.getInstance("RSA");
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
-                this.publicKey = keyFactory.generatePublic(publicKeySpec);
+                publicKey = keyFactory.generatePublic(publicKeySpec);
 
-                cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-                cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
+                // Cipher for RSA Encryption.
+                Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
                 byte[] tupleBytes = tuple.getBytes(StandardCharsets.UTF_8);
 
@@ -282,17 +299,18 @@ public class Client {
     }
 
 
-    public byte[] hashWithMD5(String result) {
+    public static byte[] hashWithMD5(String result) {
         byte[] hash;
         hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
         return hash;
     }
 
-    public boolean verifyHash(PublicKey publicKey, byte[] input) {
+    public static boolean verifyHash(PublicKey publicKey, byte[] input) {
         try {
-            signature = Signature.getInstance("SHA256withRSA");
+            // For signing
+            Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
-            signature.update(hashWithMD5(this.clientTuple));
+            signature.update(hashWithMD5(clientTuple));
             return signature.verify(input);
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {

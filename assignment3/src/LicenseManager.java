@@ -15,7 +15,6 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class LicenseManager {
     PrivateKey privateKey;
-    Client client;
     Signature privateSignature;
     MessageDigest messageDigest;
     PublicKey publicKey;
@@ -23,8 +22,8 @@ public class LicenseManager {
     KeyFactory keyFactory;
     FileInputStream fis;
 
-    public LicenseManager(Client clientVar) {
-        this.client = clientVar;
+    public LicenseManager() {
+
         try {
             messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
@@ -52,7 +51,7 @@ public class LicenseManager {
                 publicKey = keyFactory.generatePublic(publicKeySpec);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
 
-                client.setPublicKey(this.publicKey);
+
 
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
@@ -60,7 +59,7 @@ public class LicenseManager {
         }
     }
 
-    public String processEncodedInfo(byte[] encrypted) {
+    public void processEncodedInfo(byte[] encrypted) {
         try {
             cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
@@ -76,7 +75,7 @@ public class LicenseManager {
 
             String md5PlainText = String.format("%032X", new BigInteger(1, hashed));
 
-            client.printHashed(hashed);
+            Client.printHashed(hashed);
 
             System.out.println("Server is being requested...");
 
@@ -91,8 +90,6 @@ public class LicenseManager {
             sign(hashed);
 
 
-            return result;
-
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                  BadPaddingException e) {
             throw new RuntimeException(e);
@@ -105,7 +102,7 @@ public class LicenseManager {
         return hash;
     }
 
-    public byte[] sign(byte[] hash) {
+    public void sign(byte[] hash) {
         try {
             privateSignature = Signature.getInstance("SHA256withRSA");
             privateSignature.initSign(privateKey);
@@ -113,18 +110,16 @@ public class LicenseManager {
 
             byte[] sign = privateSignature.sign();
 
-            System.out.printf("Server -- Digital Signature: ");
+            System.out.print("Server -- Digital Signature: ");
             String signPlainText = String.format("%032X", new BigInteger(1, sign));
             System.out.println(signPlainText);
 
-            boolean verify = client.verifyHashfromServer(sign);
+            boolean verify = Client.verifyHashfromServer(sign);
 
 
             if (verify) {
-                client.writeNewLicense(sign);
+                Client.writeNewLicense(sign);
             }
-
-            return sign;
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);
