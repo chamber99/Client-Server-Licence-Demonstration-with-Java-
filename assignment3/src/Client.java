@@ -60,9 +60,6 @@ public class Client {
             createLicense();
         }
 
-        //System.out.println("Client -- Succeed. The license file content is secured and found by the server.");
-
-        // writeNewLicense();
     }
 
     public static void getPublicKey() {
