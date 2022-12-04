@@ -154,7 +154,7 @@ public class Client {
                 System.out.println("Client -- Succeed. The license is correct.");
             } else {
                 licenseRecreated = true;
-                System.err.println("Client -- The license file has been broken!");
+                System.out.println("Client -- The license file has been broken!");
                 System.out.println("Client -- Attempting to create new license for the user.");
                 createLicense();
             }
