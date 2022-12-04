@@ -14,24 +14,21 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 public class LicenseManager {
-    PrivateKey privateKey;
-    Signature privateSignature;
-    MessageDigest messageDigest;
-    PublicKey publicKey;
-    Cipher cipher;
-    KeyFactory keyFactory;
-    FileInputStream fis;
+    PrivateKey privateKey; // Private key of LicenseManager
+    Signature privateSignature; // The Signature object for signing data
+    MessageDigest messageDigest; // MessageDigest for MD5 Hashing
+    PublicKey publicKey; // Public key of LicenseManager
+    Cipher cipher; // Cipher for decryption
+    KeyFactory keyFactory; // KeyFactory for generation of keys from .key files.
+    FileInputStream fis; // File Input Stream for reading .key files.
 
     public LicenseManager() {
-        createKeys(); // License manager creating keys
-
+        createKeys(); // License manager creating keys as soon as it gets instantiated.
         try {
             messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     private void createKeys() {

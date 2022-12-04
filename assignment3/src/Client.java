@@ -17,13 +17,13 @@ import java.util.function.Consumer;
 
 public class Client {
     private static PublicKey publicKey; // PublicKey of Client - created from public.key
-    private static boolean licenceRecreated;
+    private static boolean licenseRecreated; // Checks if there was a license found, and it was broken.
     private static KeyFactory keyFactory; // To create key
-    private static MessageDigest messageDigest;
-    private static String md5PlainText; // To print MD5 sum as a HEX string.
+    private static MessageDigest messageDigest; // For MD5 Hashing
+    private static String md5PlainText; // To print MD5 sum as a hex string.
     private static final String username = "bkisa_yedmrl"; // Statically declared username
     private static final String serial = "brky-yedm-b465"; // Statically declared serial
-    private static String macAdress; // Mac Adress
+    private static String macAdress; // MAC Adress
     private static LicenseManager manager; // Instance of LicenseManager.
     private static String diskSerial; // Disk Serial
     private static String motherboardSerial; // Motherboard Serial
@@ -31,9 +31,9 @@ public class Client {
     private static File license; // The license.txt file.
     private static FileInputStream inputStream; // FileInputStream for reading key files and license.txt
 
-    public static void main(String[] args) { // Constructor of Client. The whole process starts here with the initialization.
+    public static void main(String[] args) { // Main method of Client. The whole process starts here.
         getPublicKey();
-        licenceRecreated = false;
+        licenseRecreated = false;
         System.out.println("Client started...");
         getDeviceInformation(); // Our method to get device related information.
         System.out.println("My MAC: " + macAdress);
@@ -41,7 +41,7 @@ public class Client {
         System.out.println("My Motherboard ID: " + motherboardSerial);
 
         try {
-            messageDigest = MessageDigest.getInstance("MD5");
+            messageDigest = MessageDigest.getInstance("MD5"); // initializing our MD5 Hash.
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -50,7 +50,7 @@ public class Client {
 
         clientTuple = getTuple(); // The tuple is created after collecting system information
 
-        boolean check = checkLicenseExistence(); // Checking if licence exists.
+        boolean check = checkLicenseExistence(); // Checking if license exists.
         System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
 
         if (check) {
@@ -80,7 +80,7 @@ public class Client {
 
     }
 
-    private static Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
+    private static final Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
         manager.processEncodedInfo(encrypted);
     });
 
@@ -120,7 +120,7 @@ public class Client {
         license = new File("license.txt");
         try {
             creation = license.createNewFile();
-            if (creation || licenceRecreated) {
+            if (creation || licenseRecreated) {
                 FileOutputStream outputStream = new FileOutputStream(license);
                 byte[] hashed = hashWithMD5(getTuple());
                 md5PlainText = String.format("%032X", new BigInteger(1, hashed));
@@ -153,7 +153,7 @@ public class Client {
             if (hashCorrect && verify) {
                 System.out.println("Client -- Succeed. The license is correct.");
             } else {
-                licenceRecreated = true;
+                licenseRecreated = true;
                 System.err.println("Client -- The license file has been broken!");
                 System.out.println("Client -- Attempting to create new license for the user.");
                 createLicense();
@@ -185,7 +185,7 @@ public class Client {
 
     private static void getDeviceInformation() {
         macAdress = getMacAdress();
-        diskSerial = getDiskSerial('C');
+        diskSerial = getDiskSerial();
         motherboardSerial = getMotherboardSerial();
 
         CharSequence seq = "nullSerialNumber";
@@ -218,12 +218,12 @@ public class Client {
         return "null";
     }
 
-    private static String getDiskSerial(Character letter) {
+    private static String getDiskSerial() {
         String line;
         String serial = null;
         Process process;
         try {
-            process = Runtime.getRuntime().exec("cmd /c vol " + letter + ":");
+            process = Runtime.getRuntime().exec("cmd /c vol " + 'C' + ":");
             BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
             while ((line = in.readLine()) != null) {
                 if (line.toLowerCase().contains("serial number")) {
@@ -305,13 +305,13 @@ public class Client {
         return hash;
     }
 
-    private static boolean verifyHash(PublicKey publicKey, byte[] input) {
+    private static boolean verifyHash(PublicKey publicKey, byte[] hashedInput) {
         try {
             // For signing
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
             signature.update(hashWithMD5(clientTuple));
-            return signature.verify(input);
+            return signature.verify(hashedInput);
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
