@@ -63,7 +63,7 @@ public class Client {
     }
 
     private static void getPublicKey() {
-        File publicKeyFile = new File("keys\\public.key");
+        File publicKeyFile = new File("public.key");
         try {
             inputStream = new FileInputStream(publicKeyFile);
             byte[] keyBytes = inputStream.readAllBytes();
@@ -267,7 +267,7 @@ public class Client {
     private static byte[] encryptWithRSA(String tuple) {
         byte[] keyBytes;
 
-        File publicKeyFile = new File("keys\\public.key");
+        File publicKeyFile = new File("public.key");
         if (publicKeyFile.exists() && publicKeyFile.isFile()) {
             try {
                 inputStream = new FileInputStream(publicKeyFile);

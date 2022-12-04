@@ -32,8 +32,8 @@ public class LicenseManager {
     }
 
     private void createKeys() {
-        File privateKeyFile = new File("keys\\private.key");
-        File publicKeyFile = new File("keys\\public.key");
+        File privateKeyFile = new File("private.key");
+        File publicKeyFile = new File("public.key");
         if (privateKeyFile.exists() && publicKeyFile.exists() && privateKeyFile.isFile() && publicKeyFile.isFile()) {
             try {
                 fis = new FileInputStream(privateKeyFile);
