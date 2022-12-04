@@ -23,6 +23,7 @@ public class LicenseManager {
     FileInputStream fis;
 
     public LicenseManager() {
+        createKeys(); // License manager creating keys
 
         try {
             messageDigest = MessageDigest.getInstance("MD5");
@@ -33,7 +34,7 @@ public class LicenseManager {
 
     }
 
-    public void createKeys() {
+    private void createKeys() {
         File privateKeyFile = new File("keys\\private.key");
         File publicKeyFile = new File("keys\\public.key");
         if (privateKeyFile.exists() && publicKeyFile.exists() && privateKeyFile.isFile() && publicKeyFile.isFile()) {
@@ -51,7 +52,7 @@ public class LicenseManager {
                 publicKey = keyFactory.generatePublic(publicKeySpec);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
 
-
+                fis.close();
 
             } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
                 e.printStackTrace();
@@ -96,13 +97,13 @@ public class LicenseManager {
         }
     }
 
-    public byte[] hashWithMD5(String result) {
+    private byte[] hashWithMD5(String result) {
         byte[] hash;
         hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
         return hash;
     }
 
-    public void sign(byte[] hash) {
+    private void sign(byte[] hash) {
         try {
             privateSignature = Signature.getInstance("SHA256withRSA");
             privateSignature.initSign(privateKey);

@@ -47,22 +47,22 @@ public class Client {
         }
         manager = new LicenseManager(); // Creating the LicenseManager instance
         System.out.println("LicenseManager service started...");
-        manager.createKeys(); // License manager creating keys
+
         clientTuple = getTuple(); // The tuple is created after collecting system information
 
         boolean check = checkLicenseExistence(); // Checking if licence exists.
         System.out.println(check ? "Client -- License file is found" : "Client -- License file is not found");
 
         if (check) {
+            System.out.println("Client -- Verifying the license file found on this device...");
             verifyLicense();
         } else {
-            //System.out.println("Client -- License file is not found");
             createLicense();
         }
 
     }
 
-    public static void getPublicKey() {
+    private static void getPublicKey() {
         File publicKeyFile = new File("keys\\public.key");
         try {
             inputStream = new FileInputStream(publicKeyFile);
@@ -71,16 +71,16 @@ public class Client {
             keyFactory = KeyFactory.getInstance("RSA");
             EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
             publicKey = keyFactory.generatePublic(publicKeySpec);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+
+            inputStream.close();
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
 
     }
 
-    public static Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
+    private static Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
         manager.processEncodedInfo(encrypted);
     });
 
@@ -144,6 +144,8 @@ public class Client {
             byte[] signBytes = new byte[128];
             System.arraycopy(license, 46, signBytes, 0, 128);
 
+            inputStream.close();
+
             String[] split = new String(license, StandardCharsets.UTF_8).split("#####sign#####");
             boolean hashCorrect = String.format("%032X", new BigInteger(1, md5Hash)).equals(split[0]);
             boolean verify = verifyHash(publicKey, signBytes);
@@ -157,7 +159,7 @@ public class Client {
                 createLicense();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
@@ -216,7 +218,7 @@ public class Client {
         return "null";
     }
 
-    public static String getDiskSerial(Character letter) {
+    private static String getDiskSerial(Character letter) {
         String line;
         String serial = null;
         Process process;
@@ -275,6 +277,8 @@ public class Client {
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
                 publicKey = keyFactory.generatePublic(publicKeySpec);
 
+                inputStream.close();
+
                 // Cipher for RSA Encryption.
                 Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -295,14 +299,13 @@ public class Client {
         return null;
     }
 
-
-    public static byte[] hashWithMD5(String result) {
+    private static byte[] hashWithMD5(String result) {
         byte[] hash;
         hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
         return hash;
     }
 
-    public static boolean verifyHash(PublicKey publicKey, byte[] input) {
+    private static boolean verifyHash(PublicKey publicKey, byte[] input) {
         try {
             // For signing
             Signature signature = Signature.getInstance("SHA256withRSA");
