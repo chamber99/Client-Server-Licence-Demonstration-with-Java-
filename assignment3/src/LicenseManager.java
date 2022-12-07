@@ -27,7 +27,7 @@ public class LicenseManager {
         try {
             messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
@@ -90,7 +90,7 @@ public class LicenseManager {
 
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
                  BadPaddingException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
@@ -120,7 +120,7 @@ public class LicenseManager {
             }
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
 
