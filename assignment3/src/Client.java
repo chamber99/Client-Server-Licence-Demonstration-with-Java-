@@ -31,7 +31,8 @@ public class Client {
     private static File license; // The license.txt file.
     private static FileInputStream inputStream; // FileInputStream for reading key files and license.txt
 
-    public static void main(String[] args) { // Main method of Client. The whole process starts here.
+    public static void main(String[] args)
+    { // Main method of Client. The whole process starts here.
         getPublicKey();
         licenseRecreated = false;
         System.out.println("Client started...");
@@ -59,35 +60,31 @@ public class Client {
         } else {
             createLicense();
         }
-
     }
-
-    private static void getPublicKey() {
+    private static void getPublicKey()
+    {
+        // This method reads the public.key file and creates the public key.
         File publicKeyFile = new File("public.key");
         try {
             inputStream = new FileInputStream(publicKeyFile);
             byte[] keyBytes = inputStream.readAllBytes();
-
             keyFactory = KeyFactory.getInstance("RSA");
             EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
             publicKey = keyFactory.generatePublic(publicKeySpec);
-
             inputStream.close();
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
-
-
     }
-
-    private static final Consumer<byte[]> licenseManagerConsumer = (encrypted -> { // Consumer for the LicenseManager operation.
+    private static final Consumer<byte[]> licenseManagerConsumer = (encrypted -> {
+        // Consumer for the LicenseManager operation.
         manager.processEncodedInfo(encrypted);
     });
 
-    public static boolean verifyHashfromServer(byte[] signature) {
-
+    public static boolean verifyHashfromServer(byte[] signature)
+    {
+        // This method is used for verifying response which comes from server. It is an intermediary method.
         md5PlainText = String.format("%032X", new BigInteger(1, signature));
-
         boolean result = verifyHash(publicKey, signature);
         if (result) {
             File lic = new File("license.txt");
@@ -98,8 +95,8 @@ public class Client {
         }
         return result;
     }
-
-    private static boolean checkLicenseExistence() { // This method checks if the client has a valid license.
+    private static boolean checkLicenseExistence() {
+        // This method checks if the client has a valid license.
         license = new File("license.txt");
         if (license.exists() && license.isFile()) {
             try {
@@ -115,8 +112,8 @@ public class Client {
     }
 
     public static void writeNewLicense(byte[] signature) {
+        // If licence.txt does not exist or it is corrupted,this method is called in order to create new licence.
         boolean creation;
-
         license = new File("license.txt");
         try {
             creation = license.createNewFile();
@@ -135,7 +132,9 @@ public class Client {
         }
     }
 
-    private static void verifyLicense() {
+    private static void verifyLicense()
+    {
+        // This method is called if the licence file exists on client device.
         clientTuple = getTuple();
         byte[] md5Hash = hashWithMD5(clientTuple);
 
@@ -163,27 +162,34 @@ public class Client {
         }
     }
 
-    private static void printEncrypted(byte[] encrypted) {
+    private static void printEncrypted(byte[] encrypted)
+    {
+        // This method prints the encrypted licence text in hex format.
         String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
         System.out.println("Client -- Encrypted License Text: " + encryptedHex);
     }
 
     public static void printHashed(byte[] hashed) {
+        // This method prints the hashed licence text.
         System.out.print("Client -- MD5 License Text: ");
         md5PlainText = String.format("%032X%n", new BigInteger(1, hashed));
         System.out.print(md5PlainText);
     }
 
-    private static void createLicense() {
+    private static void createLicense()
+    {
+        // This method calls process encoded info method of licence manager.
         System.out.println("Client -- Raw License Text: " + clientTuple);
         licenseManagerConsumer.accept(encryptWithRSA(clientTuple));
     }
 
     private static String getTuple() {
+        // This method assembles client tuple.
         return username + "$" + serial + "$" + macAdress + "$" + diskSerial + "$" + motherboardSerial;
     }
 
     private static void getDeviceInformation() {
+        // This method collects necessary device information.
         macAdress = getMacAdress();
         diskSerial = getDiskSerial();
         motherboardSerial = getMotherboardSerial();
@@ -195,7 +201,9 @@ public class Client {
         clientTuple = getTuple();
     }
 
-    private static String getMotherboardSerial() {
+    private static String getMotherboardSerial()
+    {
+        // This method gets the motherboard serial number of computer.
         try {
             String result = null;
             Process p = Runtime.getRuntime().exec("wmic baseboard get serialnumber");
@@ -218,7 +226,9 @@ public class Client {
         return "null";
     }
 
-    private static String getDiskSerial() {
+    private static String getDiskSerial()
+    {
+        // This method returns the serial number of disk.
         String line;
         String serial = null;
         Process process;
@@ -237,7 +247,9 @@ public class Client {
         return serial;
     }
 
-    private static String getMacAdress() {
+    private static String getMacAdress()
+    {
+        // This method gets mac address if proper internet connection exists.
         InetAddress localHost;
         NetworkInterface networkInterface;
 
@@ -264,7 +276,10 @@ public class Client {
         return "Mac address cannot be gathered!";
     }
 
-    private static byte[] encryptWithRSA(String tuple) {
+    private static byte[] encryptWithRSA(String tuple)
+    {
+        // This method encrypts the information by using RSA.
+
         byte[] keyBytes;
 
         File publicKeyFile = new File("public.key");
@@ -272,11 +287,9 @@ public class Client {
             try {
                 inputStream = new FileInputStream(publicKeyFile);
                 keyBytes = inputStream.readAllBytes();
-
                 keyFactory = KeyFactory.getInstance("RSA");
                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
                 publicKey = keyFactory.generatePublic(publicKeySpec);
-
                 inputStream.close();
 
                 // Cipher for RSA Encryption.
@@ -299,15 +312,18 @@ public class Client {
         return null;
     }
 
-    private static byte[] hashWithMD5(String result) {
+    private static byte[] hashWithMD5(String result)
+    {
+        // Hashing process with MD5.
         byte[] hash;
         hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
         return hash;
     }
 
-    private static boolean verifyHash(PublicKey publicKey, byte[] hashedInput) {
+    private static boolean verifyHash(PublicKey publicKey, byte[] hashedInput)
+    {
         try {
-            // For signing
+            // This method is for verifying the digital signature created by the licence manager.
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(publicKey);
             signature.update(hashWithMD5(clientTuple));

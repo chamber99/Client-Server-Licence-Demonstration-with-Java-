@@ -22,7 +22,8 @@ public class LicenseManager {
     KeyFactory keyFactory; // KeyFactory for generation of keys from .key files.
     FileInputStream fis; // File Input Stream for reading .key files.
 
-    public LicenseManager() {
+    public LicenseManager()
+    {
         createKeys(); // License manager creating keys as soon as it gets instantiated.
         try {
             messageDigest = MessageDigest.getInstance("MD5");
@@ -32,6 +33,7 @@ public class LicenseManager {
     }
 
     private void createKeys() {
+        // This method reads the key files and creates the public and private keys.
         File privateKeyFile = new File("private.key");
         File publicKeyFile = new File("public.key");
         if (privateKeyFile.exists() && publicKeyFile.exists() && privateKeyFile.isFile() && publicKeyFile.isFile()) {
@@ -57,34 +59,24 @@ public class LicenseManager {
         }
     }
 
-    public void processEncodedInfo(byte[] encrypted) {
+    public void processEncodedInfo(byte[] encrypted)
+    {
+        // This method decrypts information received from client,hashes it and then calls the sign method.
         try {
             cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
             byte[] decrypted = cipher.doFinal(encrypted);
-
             //decrypted = clearPadding(decrypted);
-
             String result = new String(decrypted, StandardCharsets.UTF_8);
-
             byte[] hashed = hashWithMD5(result);
-
             String md5PlainText = String.format("%032X", new BigInteger(1, hashed));
-
             Client.printHashed(hashed);
-
             System.out.println("Server is being requested...");
-
             String encryptedHex = String.format("%032X", new BigInteger(1, encrypted));
-
             //System.out.println("Server -- Incoming Encrypted Text: " + new String(encrypted, StandardCharsets.UTF_8));
             System.out.println("Server -- Incoming Encrypted Text: " + encryptedHex);
             System.out.println("Server -- Decrypted Text: " + result);
             System.out.println("Server -- MD5 Plain License Text: " + md5PlainText);
-
-
             sign(hashed);
 
 
@@ -94,27 +86,29 @@ public class LicenseManager {
         }
     }
 
-    private byte[] hashWithMD5(String result) {
+    private byte[] hashWithMD5(String result)
+    {
+        // This method hashes the result by using md5.
         byte[] hash;
         hash = messageDigest.digest(result.getBytes(StandardCharsets.UTF_8));
         return hash;
     }
 
-    private void sign(byte[] hash) {
+    private void sign(byte[] hash)
+    {
+        // This method signs the hashed information by using RSA and the digital signature.
         try {
             privateSignature = Signature.getInstance("SHA256withRSA");
             privateSignature.initSign(privateKey);
             privateSignature.update(hash);
-
             byte[] sign = privateSignature.sign();
-
             System.out.print("Server -- Digital Signature: ");
             String signPlainText = String.format("%032X", new BigInteger(1, sign));
             System.out.println(signPlainText);
-
+            // Verifying the signed data in client class.
             boolean verify = Client.verifyHashfromServer(sign);
 
-
+            // If the verification succeeds, a new licence file is created.
             if (verify) {
                 Client.writeNewLicense(sign);
             }
